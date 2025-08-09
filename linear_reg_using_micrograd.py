@@ -1,7 +1,7 @@
 """Linear regression that leverages the micrograd engine."""
 
 from typing import List
-from micrograd import Value
+from micro_grad import Value
 import random
 
 def mse_loss(predictions: List[Value], labels: List[Value]) -> Value:
