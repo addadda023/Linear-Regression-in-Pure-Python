@@ -25,7 +25,7 @@ class LinearRegression():
     def __init__(self, batch_size: int, num_features: int) -> None:
         self.batch_size = batch_size
         self.num_features = num_features
-        # TODO (avsar): Add utility to initialize with other methods.
+        # TODO (addadda023): Add utility to initialize with other methods.
         # self.weights = [random() for index in range(num_features)]
         self.weights = [0 for index in range(num_features)]
         self.bias = random()
