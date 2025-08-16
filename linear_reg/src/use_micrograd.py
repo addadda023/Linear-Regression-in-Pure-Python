@@ -2,12 +2,21 @@
 
 import argparse
 from typing import List
-from micrograd import Value, AdagradOptimizer, SGDOptimizer, MomentumOptimizer, AdamOptimizer
+from src.micrograd import Value
+from linear_reg.optim import optimizer
 import random
+
+
+AdagradOptimizer = optimizer.AdagradOptimizer
+SGDOptimizer = optimizer.SGDOptimizer
+MomentumOptimizer = optimizer.MomentumOptimizer 
+AdamOptimizer = optimizer.AdamOptimizer
+
 
 def mse_loss(predictions: List[Value], labels: List[Value]) -> Value:
     """Returns the mean squared loss."""
     return sum((pred - label)**2 for pred, label in zip(predictions, labels)) * (1/len(labels))
+
 
 class LinearRegression:
     def __init__(self, num_features: int) -> None:
@@ -26,6 +35,7 @@ class LinearRegression:
         # Dot product of weights and features, plus bias
         out = sum([self.weights[i] * features[i] for i in range(self.num_features)], self.bias)
         return out
+
 
 def train(model: LinearRegression, optimizer, features: List[List[float]], labels: List[float], epochs: int, batch_size: int):
     """Trains the linear regression model using minibatch gradient descent."""
