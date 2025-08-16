@@ -1,4 +1,4 @@
-"""Extend micrograd to use custom optimizers."""
+"""Micrograd with support for custom optimizers."""
 
 import math
 from typing import Tuple, Self
