@@ -2,7 +2,7 @@
 
 import argparse
 from typing import List
-from micrograd import Value, AdagradOptimizer, SGDOptimizer
+from micrograd import Value, AdagradOptimizer, SGDOptimizer, MomentumOptimizer, AdamOptimizer
 import random
 
 def mse_loss(predictions: List[Value], labels: List[Value]) -> Value:
@@ -62,10 +62,14 @@ def train(model: LinearRegression, optimizer, features: List[List[float]], label
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Train a linear regression model.')
-    parser.add_argument('--optimizer', type=str, default='sgd', choices=['sgd', 'adagrad'], help='The optimizer to use.')
+    parser.add_argument('--optimizer', type=str, default='sgd', choices=['sgd', 'adagrad', 'momentum', 'adam'], help='The optimizer to use.')
     parser.add_argument('--learning_rate', type=float, default=0.01, help='The learning rate.')
     parser.add_argument('--epochs', type=int, default=30, help='The number of epochs.')
     parser.add_argument('--batch_size', type=int, default=2, help='The batch size.')
+    parser.add_argument('--momentum', type=float, default=0.9, help='The momentum for the momentum optimizer.')
+    parser.add_argument('--beta1', type=float, default=0.9, help='The beta1 for the Adam optimizer.')
+    parser.add_argument('--beta2', type=float, default=0.999, help='The beta2 for the Adam optimizer.')
+    parser.add_argument('--epsilon', type=float, default=1e-8, help='The epsilon for the Adam optimizer.')
     args = parser.parse_args()
 
     # Generate some sample data
@@ -80,6 +84,10 @@ if __name__ == "__main__":
         optimizer = SGDOptimizer(model.parameters(), learning_rate=args.learning_rate)
     elif args.optimizer == 'adagrad':
         optimizer = AdagradOptimizer(model.parameters(), learning_rate=args.learning_rate)
+    elif args.optimizer == 'momentum':
+        optimizer = MomentumOptimizer(model.parameters(), learning_rate=args.learning_rate, momentum=args.momentum)
+    elif args.optimizer == 'adam':
+        optimizer = AdamOptimizer(model.parameters(), learning_rate=args.learning_rate, beta1=args.beta1, beta2=args.beta2, epsilon=args.epsilon)
 
     # Train the model
     train(model, optimizer, X, y, epochs=args.epochs, batch_size=args.batch_size)
