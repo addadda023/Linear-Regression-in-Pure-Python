@@ -1,5 +1,6 @@
-"""Adapted from micrograd/engine.py"""
+"""Extend micrograd to use custom optimizers."""
 
+import math
 from typing import Tuple, Self
 
 class Value:
@@ -12,7 +13,7 @@ class Value:
         self.label = label
     
     def __repr__(self):
-        return f"Value(data={self.data}, grad={self.grad})"
+        return(f"Value(value={self.value})")
     
     def __add__(self, other) -> Self:
         other = other if isinstance(other, Value) else Value(other)
@@ -63,7 +64,7 @@ class Value:
         return self * -1
 
     def __radd__(self, other): # other + self
-        return self + otherg
+        return self + other
 
     def __sub__(self, other): # self - other
         return self + (-other)
@@ -79,3 +80,33 @@ class Value:
 
     def __rtruediv__(self, other): # other / self
         return other * self**-1
+
+class Optimizer:
+    def __init__(self, parameters, learning_rate=0.01):
+        self.parameters = parameters
+        self.learning_rate = learning_rate
+
+    def step(self):
+        raise NotImplementedError
+
+    def zero_grad(self):
+        for p in self.parameters:
+            p.grad = 0
+
+class AdagradOptimizer(Optimizer):
+    def __init__(self, parameters, learning_rate=0.01):
+        super().__init__(parameters, learning_rate)
+        self.cache = {p: 0 for p in self.parameters}
+
+    def step(self):
+        for p in self.parameters:
+            self.cache[p] += p.grad**2
+            p.value -= self.learning_rate * p.grad / (math.sqrt(self.cache[p]) + 1e-8)
+
+class SGDOptimizer(Optimizer):
+    def __init__(self, parameters, learning_rate=0.01):
+        super().__init__(parameters, learning_rate)
+
+    def step(self):
+        for p in self.parameters:
+            p.value -= self.learning_rate * p.grad
