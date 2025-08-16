@@ -1,7 +1,8 @@
 """Linear regression that leverages the micrograd engine."""
 
+import argparse
 from typing import List
-from micro_grad import Value
+from micrograd import Value, AdagradOptimizer, SGDOptimizer
 import random
 
 def mse_loss(predictions: List[Value], labels: List[Value]) -> Value:
@@ -18,10 +19,6 @@ class LinearRegression:
     def parameters(self):
         return self.weights + [self.bias]
 
-    def zero_grad(self):
-        for p in self.parameters():
-            p.grad = 0
-
     def forward(self, features: List[float]) -> Value:
         if len(features) != self.num_features:
             raise ValueError(f"Number of features in input ({len(features)}) does not match model's num_features ({self.num_features})")
@@ -30,11 +27,7 @@ class LinearRegression:
         out = sum([self.weights[i] * features[i] for i in range(self.num_features)], self.bias)
         return out
 
-    def update_params(self, learning_rate: float):
-        for p in self.parameters():
-            p.value -= learning_rate * p.grad
-
-def train(model: LinearRegression, features: List[List[float]], labels: List[float], learning_rate: float, epochs: int, batch_size: int):
+def train(model: LinearRegression, optimizer, features: List[List[float]], labels: List[float], epochs: int, batch_size: int):
     """Trains the linear regression model using minibatch gradient descent."""
     num_samples = len(features)
     for epoch in range(epochs):
@@ -44,7 +37,7 @@ def train(model: LinearRegression, features: List[List[float]], labels: List[flo
         features, labels = zip(*combined)
 
         total_loss = 0
-        for i in range(0, batch_size, num_samples):
+        for i in range(0, num_samples, batch_size):
             # Get minibatch
             batch_features = features[i:i+batch_size]
             batch_labels = [Value(l) for l in labels[i:i+batch_size]]
@@ -57,26 +50,39 @@ def train(model: LinearRegression, features: List[List[float]], labels: List[flo
             total_loss += loss.value
 
             # Backward pass
-            model.zero_grad()
+            optimizer.zero_grad()
             loss.backward()
             
             # Update weights
-            model.update_params(learning_rate)
+            optimizer.step()
 
         if (epoch + 1) % 5 == 0:
             print(f'Epoch [{epoch+1}/{epochs}], Total Loss per epoch: {total_loss:.4f}, Loss per sample: {total_loss/num_samples:.4f}')
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Train a linear regression model.')
+    parser.add_argument('--optimizer', type=str, default='sgd', choices=['sgd', 'adagrad'], help='The optimizer to use.')
+    parser.add_argument('--learning_rate', type=float, default=0.01, help='The learning rate.')
+    parser.add_argument('--epochs', type=int, default=30, help='The number of epochs.')
+    parser.add_argument('--batch_size', type=int, default=2, help='The batch size.')
+    args = parser.parse_args()
+
     # Generate some sample data
     X = [[1.0, 2.0], [2.0, 3.0], [3.0, 4.0], [4.0, 5.0], [5.0, 6.0]]
     y = [3.0, 5.0, 7.0, 9.0, 11.0]
 
     # Initialize the model
     model = LinearRegression(num_features=2)
+    
+    # Initialize the optimizer
+    if args.optimizer == 'sgd':
+        optimizer = SGDOptimizer(model.parameters(), learning_rate=args.learning_rate)
+    elif args.optimizer == 'adagrad':
+        optimizer = AdagradOptimizer(model.parameters(), learning_rate=args.learning_rate)
 
     # Train the model
-    train(model, X, y, learning_rate=0.003, epochs=30, batch_size=2)
+    train(model, optimizer, X, y, epochs=args.epochs, batch_size=args.batch_size)
     # Make a prediction
     test_features = [5.0, 6.0]
     prediction = model.forward(test_features)
