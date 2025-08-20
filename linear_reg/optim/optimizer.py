@@ -45,6 +45,18 @@ class MomentumOptimizer(Optimizer):
             self.velocity[p] = self.momentum * self.velocity[p] + p.grad
             p.value -= self.learning_rate * self.velocity[p]
 
+class RMSPropOptimizer(Optimizer):
+    def __init__(self, parameters, learning_rate=0.001, beta=0.9, epsilon=1e-8):
+        super().__init__(parameters, learning_rate)
+        self.beta = beta
+        self.epsilon = epsilon
+        self.v = {p: 0 for p in self.parameters}
+
+    def step(self):
+        for p in self.parameters:
+            self.v[p] = self.beta * self.v[p] + (1 - self.beta) * (p.grad**2)
+            p.value -= self.learning_rate * p.grad / (math.sqrt(self.v[p]) + self.epsilon)
+            
 class AdamOptimizer(Optimizer):
     def __init__(self, parameters, learning_rate=0.001, beta1=0.9, beta2=0.999, epsilon=1e-8):
         super().__init__(parameters, learning_rate)
