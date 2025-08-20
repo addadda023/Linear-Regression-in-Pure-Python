@@ -8,5 +8,6 @@ This approach leverages micrograd to propagate the gradients using chain rule. T
 * SGD
 * Adagrad
 * Momentum
+* RMSProp
 * Adam
 
